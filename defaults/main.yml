@@ -1,0 +1,278 @@
+---
+
+postfix_backup_configs: false
+# options include "mta", "mda", "null-client"
+postfix_role: none
+postfix_spamassassin: "{{ postfix_role in ['mta', 'mda'] }}"
+postfix_clamav: "{{ postfix_role in ['mta', 'mda'] }}"
+# Debian-specific
+#postfix_mailname:
+
+__postfix_debian: "{{ ansible_os_family == 'Debian' }}"
+__postfix_redhat: "{{ ansible_os_family == 'RedHat' }}"
+__postfix_smartos: "{{ ansible_os_family == 'Solaris' and ansible_distribution == 'SmartOS' }}"
+__postfix_os: "{{ 'smartos' if __postfix_smartos else ansible_os_family | lower }}"
+
+__postfix_debian_packages:
+  - postfix
+  - bsd-mailx
+  #- procmail
+__postfix_redhat_packages:
+  - postfix
+  - mailx
+__postfix_smartos_packages:
+  - postfix
+
+__postfix_debian_spamassassin_packages:
+  - amavisd-new
+  - spamassassin
+  - libnet-dns-perl
+  - libmail-spf-perl
+  - pyzor
+  - razor
+__postfix_redhat_spamassassin_packages:
+  - amavisd-new
+  - spamassassin
+__postfix_smartos_spamassassin_packages:
+  - amavisd-new
+  - spamassassin
+
+__postfix_debian_clamav_packages:
+  - amavisd-new
+  - clamav-daemon
+  - arj
+  - bzip2
+  - cabextract
+  - cpio
+  - file
+  - gzip
+  - nomarch
+  - pax
+  - unrar-free
+  - unzip
+  - zip
+  - p7zip-full
+__postfix_redhat_clamav_packages:
+  - amavisd-new
+  - clamav
+__postfix_smartos_clamav_packages:
+  - amavisd-new
+  - clamav
+
+__postfix_packages: >-
+  {{
+    __postfix_debian_packages if __postfix_debian else (
+    __postfix_redhat_packages if __postfix_redhat else (
+    __postfix_smartos_packages if __postfix_smartos else
+    None))
+  }}
+__postfix_spamassassin_packages: >-
+  {{
+    __postfix_debian_spamassassin_packages if __postfix_debian and postfix_spamassassin else (
+    __postfix_redhat_spamassassin_packages if __postfix_redhat and postfix_spamassassin else (
+    __postfix_smartos_spamassassin_packages if __postfix_smartos and postfix_spamassassin else
+    []))
+  }}
+__postfix_clamav_packages: >-
+  {{
+    __postfix_debian_clamav_packages if __postfix_debian and postfix_clamav else (
+    __postfix_redhat_clamav_packages if __postfix_redhat and postfix_clamav else (
+    __postfix_smartos_clamav_packages if __postfix_smartos and postfix_clamav else
+    []))
+  }}
+postfix_packages: >-
+  {{
+    __postfix_packages + __postfix_spamassassin_packages + __postfix_clamav_packages
+  }}
+
+postfix_config_dir: >-
+  {{
+    '/opt/local/etc/postfix' if __postfix_smartos else '/etc/postfix'
+  }}
+
+__postfix_config_default:
+  common:
+    append_dot_mydomain: "no"
+    biff: "no"
+    inet_protocols: all
+    mydestination: $myhostname, localhost.$mydomain, localhost
+    myhostname: "{{ inventory_hostname }}"
+    mynetworks_style: host
+    smtpd_banner: $myhostname ESMTP $mail_name
+    strict_rfc821_envelopes: yes
+  # OSs/distros
+  debian:
+    alias_maps: hash:/etc/aliases
+    alias_database: hash:/etc/aliases
+    compatibility_level: 2
+    myorigin: /etc/mailname
+    readme_directory: "no"
+  redhat:
+    alias_maps: hash:/etc/aliases
+    alias_database: hash:/etc/aliases
+    config_directory: /etc/postfix
+    daemon_directory: /usr/libexec/postfix
+    data_directory: /var/lib/postfix
+    debug_peer_level: 2
+    debugger_command: PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin ddd $daemon_directory/$process_name $process_id & sleep 5
+    html_directory: "no"
+    mail_owner: postfix
+    mailq_path: /usr/bin/mailq.postfix
+    manpage_directory: /usr/share/man
+    newaliases_path: /usr/bin/newaliases.postfix
+    queue_directory: /var/spool/postfix
+    #readme_directory: /usr/share/doc/postfix-X.Y.Z/README_FILES
+    #sample_directory: /usr/share/doc/postfix-X.Y.Z/samples
+    sendmail_path: /usr/sbin/sendmail.postfix
+    setgid_group: postdrop
+  smartos:
+    command_directory: /opt/local/sbin
+    daemon_directory: /opt/local/libexec/postfix
+    data_directory: /var/db/postfix
+    debug_peer_level: 2
+    debugger_command: PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin ddd $daemon_directory/$process_name $process_id & sleep 5
+    html_directory: no
+    mail_owner: postfix
+    mailq_path: /opt/local/bin/mailq
+    manpage_directory: /opt/local/man
+    newaliases_path: /opt/local/bin/newaliases
+    queue_directory: /var/spool/postfix
+    readme_directory: /opt/local/share/doc/postfix
+    sample_directory: /opt/local/share/examples/postfix
+    sendmail_path: /opt/local/sbin/sendmail
+    setgid_group: maildrop
+  # roles
+  mda:
+    recipient_delimiter: +
+  mta: {}
+  none: {}
+  null-client:
+    inet_interfaces: loopback-only
+    local_transport: error:local delivery is disabled
+    mydestination: ''
+    myorigin: "$mydomain"
+    relayhost: "$mydomain"
+__postfix_config_merged: >-
+  {{
+    __postfix_config_default.common
+    | combine(__postfix_config_default[__postfix_os] | default({}))
+    | combine(__postfix_config_default[postfix_role] | default({}))
+    | combine(postfix_config | default({}))
+  }}
+
+__postfix_master_config_default:
+  common:
+    smtp-inet:
+      private: no
+      chroot: yes
+      command: smtpd
+    pickup-unix:
+      private: no
+      chroot: yes
+      wakeup: 60
+      maxproc: 1
+      command: pickup
+    cleanup-unix:
+      private: no
+      chroot: yes
+      maxproc: 0
+      command: cleanup
+    qmgr-unix:
+      private: no
+      chroot: no
+      wakeup: 300
+      maxproc: 1
+      command: qmgr
+    tlsmgr-unix:
+      chroot: yes
+      wakeup: 1000?
+      maxproc: 1
+      command: tlsmgr
+    rewrite-unix:
+      chroot: yes
+      command: trivial-rewrite
+    bounce-unix:
+      chroot: yes
+      maxproc: 0
+      command: bounce
+    defer-unix:
+      chroot: yes
+      maxproc: 0
+      command: bounce
+    trace-unix:
+      chroot: yes
+      maxproc: 0
+      command: bounce
+    verify-unix:
+      chroot: yes
+      maxproc: 1
+      command: verify
+    flush-unix:
+      private: no
+      chroot: yes
+      wakeup: 1000?
+      maxproc: 0
+      command: flush
+    proxymap-unix:
+      chroot: no
+      command: proxymap
+    proxywrite-unix:
+      chroot: no
+      maxproc: 1
+      command: proxymap
+    smtp-unix:
+      chroot: yes
+      command: smtp
+    relay-unix:
+      chroot: yes
+      command: smtp
+      args: -o syslog_name=postfix/$service_name
+    showq-unix:
+      private: no
+      chroot: yes
+      command: showq
+    error-unix:
+      chroot: yes
+      command: error
+    retry-unix:
+      chroot: yes
+      command: error
+    discard-unix:
+      chroot: yes
+      command: discard
+    local-unix:
+      unpriv: no
+      chroot: no
+      command: local
+    virtual-unix:
+      unpriv: no
+      chroot: no
+      command: virtual
+    lmtp-unix:
+      chroot: yes
+      command: lmtp
+    anvil-unix:
+      chroot: yes
+      maxproc: 1
+      command: anvil
+    scache-unix:
+      chroot: yes
+      maxproc: 1
+      command: scache
+__postfix_master_config_merged: >-
+  {{
+    __postfix_master_config_default.common
+    | combine(postfix_master_config | default({}), recursive=True)
+  }}
+
+__postfix_amavisd_new_service_names: >-
+  {{
+    ['amavis'] if postfix_spamassassin or postfix_clamav else []
+  }}
+__postfix_clamav_service_names: >-
+  {{
+    ['clamav-daemon', 'clamav-freshclam'] if postfix_clamav else []
+  }}
+__postfix_service_names:
+  - postfix
+__postfix_services: "{{ __postfix_clamav_service_names + __postfix_amavisd_new_service_names + __postfix_service_names }}"

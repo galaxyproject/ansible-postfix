@@ -1,0 +1,27 @@
+# ==========================================================================
+# service type  private unpriv  chroot  wakeup  maxproc command + args
+#               (yes)   (yes)   (no)    (never) (100)
+# ==========================================================================
+{% for key in __postfix_master_config_merged | sort if __postfix_master_config_merged[key].state | default('present') != 'absent' %}
+{% set service = __postfix_master_config_merged[key] %}
+{{
+    "%-9s" | format(key.split('-')[0])
+}} {{
+    "%-5s" | format(key.split('-')[1])
+}} {{
+    "%-7s" | format('-' if service.private is not defined else ('n' if (service.private == 'n' or not service.private | bool) else 'y'))
+}} {{
+    "%-7s" | format('-' if service.unpriv is not defined else ('n' if (service.unpriv == 'n' or not service.unpriv | bool) else 'y'))
+}} {{
+    "%-7s" | format('-' if service.chroot is not defined else ('n' if (service.chroot == 'n' or not service.chroot | bool) else 'y'))
+}} {{
+    "%-7s" | format(service.wakeup | default('-'))
+}} {{
+    "%-7s" | format(service.maxproc | default('-'))
+}} {{
+    service.command
+}}
+{% if 'args' in service %}
+    {{ service.args | wordwrap(wrapstring="\n    ") }}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,19 @@
+---
+
+- name: restart amavisd-new
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items: "{{ __postfix_amavisd_new_service_names }}"
+
+- name: restart clamav
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items: "{{ __postfix_clamav_service_names }}"
+
+- name: restart postfix
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items: "{{ __postfix_service_names }}"

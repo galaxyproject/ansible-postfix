@@ -1,0 +1,19 @@
+---
+
+- name: Add ClamAV user to amavisd-new group
+  user:
+    name: clamamv
+    groups: amavis
+  notify:
+    - restart clamav
+    - restart amavisd-new
+  when: postfix_clamav
+
+- name: Add amavisd-new user to ClamAV group
+  user:
+    name: amavis
+    groups: clamav
+  notify:
+    - restart clamav
+    - restart amavisd-new
+  when: postfix_clamav

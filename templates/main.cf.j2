@@ -1,0 +1,3 @@
+{% for opt in __postfix_config_merged | sort %}
+{{ opt }} = {{ __postfix_config_merged[opt] }}
+{% endfor %}

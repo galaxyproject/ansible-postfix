@@ -1,0 +1,45 @@
+---
+
+- name: Include preinstallation tasks
+  include_tasks: "{{ include_file }}"
+  with_first_found:
+    - files:
+        - preinstall_{{ __postfix_os }}.yml
+      skip: true
+  loop_control:
+    loop_var: include_file
+
+- name: Install Postfix and related feature packages
+  package:
+    name: "{{ postfix_packages }}"
+
+- name: Install/update Postfix config files
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ postfix_config_dir }}/{{ item }}"
+    backup: "{{ postfix_backup_configs }}"
+  with_items:
+    - main.cf
+    - master.cf
+  notify:
+    - restart postfix
+
+- name: Include postinstallation tasks
+  include_tasks: "{{ include_file }}"
+  with_first_found:
+    - files:
+        - postinstall_{{ __postfix_os }}.yml
+      skip: true
+  loop_control:
+    loop_var: include_file
+
+# Perform whatever restarts are needed now, prevents double restart on first run
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Ensure services are enabled and running
+  service:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items: "{{ __postfix_services }}"
