@@ -18,11 +18,26 @@
     src: "{{ item }}.j2"
     dest: "{{ postfix_config_dir }}/{{ item }}"
     backup: "{{ postfix_backup_configs }}"
-  with_items:
+  loop:
     - main.cf
     - master.cf
   notify:
     - restart postfix
+
+- name: Install maps
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ postfix_config_dir }}/{{ item | basename }}"
+  loop: "{{ postfix_maps | default([]) }}"
+  when: postfix_maps is defined
+  register: __postfix_maps_result
+
+- name: Build maps
+  command: postmap {{ item.dest }}
+  when: item is changed
+  loop: "{{ __postfix_maps_result.results }}"
+  loop_control:
+    label: "{{ item.item }}"
 
 - name: Include postinstallation tasks
   include_tasks: "{{ include_file }}"
