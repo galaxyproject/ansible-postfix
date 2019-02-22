@@ -1,3 +1,7 @@
 {% for opt in __postfix_config_merged | sort %}
-{{ opt }} = {{ __postfix_config_merged[opt] }}
+{% set val = __postfix_config_merged[opt] %}
+{% if val is not none %}
+{% set val = 'yes' if val == true else ('no' if val == false else val) %}
+{{ opt }} = {{ val }}
+{% endif %}
 {% endfor %}
