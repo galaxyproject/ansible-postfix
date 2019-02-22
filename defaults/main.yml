@@ -273,6 +273,8 @@ __postfix_clamav_service_names: >-
   {{
     ['clamav-daemon', 'clamav-freshclam'] if postfix_clamav else []
   }}
-__postfix_service_names:
-  - postfix
+__postfix_service_names: >-
+  {{
+    ['postfix@-'] if __postfix_debian else ['postfix']
+  }}
 __postfix_services: "{{ __postfix_clamav_service_names + __postfix_amavisd_new_service_names + __postfix_service_names }}"
