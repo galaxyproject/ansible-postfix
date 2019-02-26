@@ -1,0 +1,17 @@
+---
+
+- name: Add config include statement to amavisd.conf
+  lineinfile:
+    path: "{{ __postfix_amavisd_new_config_file }}"
+    line: "Amavis::Conf::include_config_files(qw({{ __postfix_amavisd_new_exclusive_config_file }}));"
+    insertbefore: '^1;\s*(\s*#.*)?$'
+  when: __postfix_amavisd_new_config_file
+  notify:
+    - restart amavisd-new
+
+- name: Install/update amavisd-new config file
+  template:
+    src: amavisd-new.conf.j2
+    dest: "{{ __postfix_amavisd_new_exclusive_config_file }}"
+  notify:
+    - restart amavisd-new

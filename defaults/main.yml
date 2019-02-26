@@ -311,3 +311,14 @@ __postfix_service_names: >-
     ['postfix@-'] if __postfix_debian else ['postfix']
   }}
 __postfix_services: "{{ __postfix_clamav_service_names + __postfix_amavisd_new_service_names + __postfix_service_names }}"
+
+
+__postfix_amavisd_new_config_file: >-
+  {{
+    '/etc/amavisd/amavisd.conf' if __postfix_redhat else None
+  }}
+__postfix_amavisd_new_exclusive_config_file: >-
+  {{
+    '/etc/amavis/conf.d/99-ansible' if __postfix_debian else '/etc/amavisd/ansible.conf'
+  }}
+__postfix_amavisd_new_config_merged: "{{ postfix_amavisd_new_config | default({}) }}"

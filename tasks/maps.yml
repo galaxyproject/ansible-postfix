@@ -1,0 +1,30 @@
+---
+
+- name: Install aliases
+  copy:
+    content: |
+      {% for key in postfix_aliases | default({}) | sort %}
+      {{ key }}: {{ postfix_aliases[key] }}
+      {% endfor %}
+    dest: "{{ __postfix_config_merged.alias_database.split(':', 1)[-1] }}"
+  when: postfix_aliases is defined
+  register: __postfix_aliases_result
+
+- name: Run newaliases
+  command: newaliases
+  when: __postfix_aliases_result is changed
+
+- name: Install maps
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ postfix_config_dir }}/{{ item | basename }}"
+  loop: "{{ postfix_maps | default([]) }}"
+  when: postfix_maps is defined
+  register: __postfix_maps_result
+
+- name: Build maps
+  command: postmap {{ item.dest }}
+  when: item is changed
+  loop: "{{ __postfix_maps_result.results }}"
+  loop_control:
+    label: "{{ item.item }}"

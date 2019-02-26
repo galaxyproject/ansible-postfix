@@ -13,6 +13,10 @@
   package:
     name: "{{ postfix_packages }}"
 
+- name: Include amavisd-new configuration tasks
+  include_tasks: amavisd-new.yml
+  when: postfix_clamav or postfix_spamassassin
+
 - name: Install/update Postfix config files
   template:
     src: "{{ item }}.j2"
@@ -24,20 +28,8 @@
   notify:
     - restart postfix
 
-- name: Install maps
-  template:
-    src: "{{ item }}.j2"
-    dest: "{{ postfix_config_dir }}/{{ item | basename }}"
-  loop: "{{ postfix_maps | default([]) }}"
-  when: postfix_maps is defined
-  register: __postfix_maps_result
-
-- name: Build maps
-  command: postmap {{ item.dest }}
-  when: item is changed
-  loop: "{{ __postfix_maps_result.results }}"
-  loop_control:
-    label: "{{ item.item }}"
+- name: Include Postfix map build tasks
+  import_tasks: maps.yml
 
 - name: Include postinstallation tasks
   include_tasks: "{{ include_file }}"
