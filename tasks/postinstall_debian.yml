@@ -2,7 +2,7 @@
 
 - name: Add ClamAV user to amavisd-new group
   user:
-    name: clamamv
+    name: clamav
     groups: amavis
   notify:
     - restart clamav
