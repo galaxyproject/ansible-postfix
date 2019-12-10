@@ -7,6 +7,7 @@ postfix_spamassassin: "{{ postfix_role in ['mta', 'mda'] }}"
 postfix_clamav: "{{ postfix_role in ['mta', 'mda'] }}"
 # Debian-specific
 #postfix_mailname:
+postfix_postsrsd: false
 
 __postfix_debian: "{{ ansible_os_family == 'Debian' }}"
 __postfix_redhat: "{{ ansible_os_family == 'RedHat' }}"
@@ -59,6 +60,9 @@ __postfix_smartos_clamav_packages:
   - amavisd-new
   - clamav
 
+__postfix_debian_postsrsd_packages:
+  - postsrsd
+
 __postfix_packages: >-
   {{
     __postfix_debian_packages if __postfix_debian else (
@@ -80,9 +84,13 @@ __postfix_clamav_packages: >-
     __postfix_smartos_clamav_packages if __postfix_smartos and postfix_clamav else
     []))
   }}
+__postfix_postsrsd_packages: >-
+  {{
+    __postfix_debian_postsrsd_packages if __postfix_debian and postfix_postsrsd else []
+  }}
 postfix_packages: >-
   {{
-    __postfix_packages + __postfix_spamassassin_packages + __postfix_clamav_packages
+    __postfix_packages + __postfix_spamassassin_packages + __postfix_clamav_packages + __postfix_postsrsd_packages
   }}
 
 postfix_config_dir: >-
