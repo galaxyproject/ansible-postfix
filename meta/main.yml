@@ -1,4 +1,5 @@
 galaxy_info:
+  role_name: postfix
   author: natefoo
   description: Postfix and related spam/virus services installation, configuration, and management for Linux
   company: The Galaxy Project
