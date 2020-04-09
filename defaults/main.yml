@@ -104,7 +104,7 @@ postfix_amavis_virusmails_clean_minute: "{{ 59 | random(seed=inventory_hostname)
 postfix_debian_amavis_virusmails_clean_command: >-
   /usr/sbin/tmpreaper --mtime {{ postfix_amavis_virusmails_clean_age | default('30d') }} /var/lib/amavis/virusmails
 postfix_redhat_amavis_virusmails_clean_command: >-
-  /usr/sbin/tmpwatch --mtime {{ postfix_amavis_virusmails_clean_age | default('30d') }} /var/lib/amavis/virusmails
+  /usr/bin/tmpwatch --mtime {{ postfix_amavis_virusmails_clean_age | default('30d') }} /var/lib/amavis/virusmails
 
 postfix_amavis_cron_jobs:
   - id: postfix_amavis_clean_virusmails
