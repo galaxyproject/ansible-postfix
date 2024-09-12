@@ -354,3 +354,15 @@ __postfix_amavisd_new_exclusive_config_file: >-
     '/etc/amavis/conf.d/99-ansible' if __postfix_debian else '/etc/amavisd/ansible.conf'
   }}
 __postfix_amavisd_new_config_merged: "{{ postfix_amavisd_new_config | default({}) }}"
+
+
+# Debian writes out a full config with a bunch of defaults that may differ from the compile-time defaults, you can
+# either have the role completely replace this file, or update its contents
+postfix_clamav_overwrite_config: "{{ not __postfix_debian }}"
+
+__postfix_clamav_config_file: >-
+  {{
+    '/etc/clamav/clamd.conf' if __postfix_debian else '/etc/clamd.d/scan.conf'
+  }}
+
+__postfix_clamav_config_merged: "{{ postfix_clamav_config | default({}) }}"

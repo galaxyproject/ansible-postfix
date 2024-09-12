@@ -17,6 +17,10 @@
   include_tasks: amavisd-new.yml
   when: postfix_clamav or postfix_spamassassin
 
+- name: Include ClamAV configuration tasks
+  include_tasks: clamav.yml
+  when: postfix_clamav and __postfix_clamav_config_merged
+
 - name: Install/update Postfix config files
   template:
     src: "{{ item }}.j2"

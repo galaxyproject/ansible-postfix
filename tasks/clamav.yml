@@ -1,0 +1,20 @@
+---
+
+- name: Set ClamAV configuration options
+  lineinfile:
+    path: "{{ __postfix_clamav_config_file }}"
+    regexp: '^{{ item.key }}\s+'
+    line: "{{ item.key }} {{ item.value }}"
+  loop: "{{ __postfix_clamav_config_merged | dict2items }}"
+  when: not postfix_clamav_overwrite_config
+  notify: restart clamav
+
+- name: Write ClamAV configuration
+  copy:
+    content: |
+      {% for key in __postfix_clamav_config_merged %}
+      {{ key }} {{ __postfix_clamav_config_merged[key] }}
+      {% endfor %}
+    dest: "{{ __postfix_clamav_config_file }}"
+  when: postfix_clamav_overwrite_config
+  notify: restart clamav
