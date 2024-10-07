@@ -14,13 +14,15 @@ __postfix_redhat: "{{ ansible_os_family == 'RedHat' }}"
 __postfix_smartos: "{{ ansible_os_family == 'Solaris' and ansible_distribution == 'SmartOS' }}"
 __postfix_os: "{{ 'smartos' if __postfix_smartos else ansible_os_family | lower }}"
 
+__postfix_chroot_default: "{{ true if __postfix_debian else false }}"
+
 __postfix_debian_packages:
   - postfix
   - bsd-mailx
   #- procmail
 __postfix_redhat_packages:
   - postfix
-  - mailx
+  - s-nail
 __postfix_smartos_packages:
   - postfix
 
@@ -197,17 +199,17 @@ __postfix_master_config_default:
   common:
     smtp-inet:
       private: no
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: smtpd
     pickup-unix:
       private: no
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       wakeup: 60
       maxproc: 1
       command: pickup
     cleanup-unix:
       private: no
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 0
       command: cleanup
     qmgr-unix:
@@ -217,7 +219,7 @@ __postfix_master_config_default:
       maxproc: 1
       command: qmgr
     tlsmgr-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       wakeup: 1000?
       maxproc: 1
       command: tlsmgr
@@ -225,24 +227,24 @@ __postfix_master_config_default:
       chroot: yes
       command: trivial-rewrite
     bounce-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 0
       command: bounce
     defer-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 0
       command: bounce
     trace-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 0
       command: bounce
     verify-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 1
       command: verify
     flush-unix:
       private: no
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       wakeup: 1000?
       maxproc: 0
       command: flush
@@ -254,24 +256,24 @@ __postfix_master_config_default:
       maxproc: 1
       command: proxymap
     smtp-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: smtp
     relay-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: smtp
       args: -o syslog_name=postfix/$service_name
     showq-unix:
       private: no
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: showq
     error-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: error
     retry-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: error
     discard-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: discard
     local-unix:
       unpriv: no
@@ -282,14 +284,14 @@ __postfix_master_config_default:
       chroot: no
       command: virtual
     lmtp-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       command: lmtp
     anvil-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 1
       command: anvil
     scache-unix:
-      chroot: yes
+      chroot: "{{ __postfix_chroot_default }}"
       maxproc: 1
       command: scache
 __postfix_amavisd_new_master_config:
