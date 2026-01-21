@@ -5,7 +5,7 @@
     path: "{{ __postfix_amavisd_new_config_file }}"
     line: "Amavis::Conf::include_config_files(qw({{ __postfix_amavisd_new_exclusive_config_file }}));"
     insertbefore: '^1;\s*(\s*#.*)?$'
-  when: __postfix_amavisd_new_config_file
+  when: __postfix_amavisd_new_config_file is truthy
   notify:
     - restart amavisd-new
 
