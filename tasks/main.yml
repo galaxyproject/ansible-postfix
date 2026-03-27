@@ -15,11 +15,11 @@
 
 - name: Include amavisd-new configuration tasks
   include_tasks: amavisd-new.yml
-  when: postfix_clamav or postfix_spamassassin
+  when: postfix_clamav is truthy or postfix_spamassassin is truthy
 
 - name: Include ClamAV configuration tasks
   include_tasks: clamav.yml
-  when: postfix_clamav and __postfix_clamav_config_merged
+  when: postfix_clamav is truthy and __postfix_clamav_config_merged is truthy
 
 - name: Install/update Postfix config files
   template:

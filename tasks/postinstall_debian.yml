@@ -7,7 +7,7 @@
   notify:
     - restart clamav
     - restart amavisd-new
-  when: postfix_clamav
+  when: postfix_clamav is truthy
 
 - name: Add amavisd-new user to ClamAV group
   user:
@@ -16,4 +16,4 @@
   notify:
     - restart clamav
     - restart amavisd-new
-  when: postfix_clamav
+  when: postfix_clamav is truthy
