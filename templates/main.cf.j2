@@ -1,6 +1,12 @@
-{% for opt in __postfix_config_merged | sort %}
+{% for opt in __postfix_config_sorted if opt in __postfix_config_merged %}
 {% set val = __postfix_config_merged[opt] %}
-{% if val is not none %}
-{{ opt }} = {{ 'yes' if val == true else ('no' if val == false else val) }}
+{% if val is none %}
+{% elif val is not iterable or val is string %}
+{{ opt }} = {{ 'yes' if val is true else ('no' if val is false else val) }}
+{% else %}
+{{ opt }} =
+{% for item in val %}
+    {{ item | indent(4) }}
+{% endfor %}
 {% endif %}
 {% endfor %}

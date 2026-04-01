@@ -11,9 +11,12 @@ use strict;
    \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);
 {% endif %}
 
-{% for opt in __postfix_amavisd_new_config_merged | sort %}
+{% for opt in __postfix_amavisd_new_config_sorted
+  if opt in __postfix_amavisd_new_config_merged %}
 {% set val = __postfix_amavisd_new_config_merged[opt] %}
-{{ opt }} = {{ 1 if val == true else (0 if val == false else ('undef' if val is none else val)) }};
+{% set val = 'undef' if val is none else
+  (val | int) if val is boolean else val %}
+{{ opt }} = {{ val }};
 {% endfor %}
 
 1;
